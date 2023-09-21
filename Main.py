@@ -34,7 +34,6 @@ class StellarBurgersTests(unittest.TestCase):
         driver.find_element_by_id(RegistrationPageLocators.EMAIL_INPUT).send_keys("example@example.com")
         driver.find_element_by_id(RegistrationPageLocators.PASSWORD_INPUT).send_keys("short")
         driver.find_element_by_id(RegistrationPageLocators.REGISTER_BUTTON).click()
-        # Добавьте проверку на появление ошибки
 
     def tearDown(self):
         # Завершение работы браузера после каждого теста
