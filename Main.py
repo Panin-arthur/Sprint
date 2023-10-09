@@ -1,43 +1,119 @@
-# test_stellar_burgers.py
-import unittest
+import pytest
 from selenium import webdriver
-from selenium.webdriver.firefox.options import Options  # Импорт настроек для Firefox
-from locators import LoginPageLocators, RegistrationPageLocators, PersonalCabinetLocators
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
-class StellarBurgersTests(unittest.TestCase):
 
-    def setUp(self):
-        # Инициализация браузера
-        self.driver = webdriver.Chrome()
-        self.driver.get("https://stellarburgers.nomoreparties.site/")
+# Ваши локаторы
+class RegistrationPageLocators:
+    NAME_INPUT = "name"
+    EMAIL_INPUT = "email"
+    PASSWORD_INPUT = "password"
+    REGISTER_BUTTON = "register-button"
+    LOGIN_BUTTON_HOMEPAGE = "login-button-homepage"
+    LOGIN_BUTTON_REGISTRATION_FORM = "login-button-registration-form"
+    LOGIN_BUTTON_PASSWORD_RECOVERY_FORM = "login-button-password-recovery-form"
+    LOGIN_BUTTON_PERSONAL_CABINET = "login-button-personal-cabinet"
+    LOGIN_EMAIL_INPUT = "login-email"
+    LOGIN_PASSWORD_INPUT = "login-password"
+    LOGIN_SUBMIT_BUTTON = "login-submit-button"
 
-        # Используем Firefox вместо Chrome
-        options = Options()
-        options.headless = True  # Запуск в "headless" режиме (без графического интерфейса)
-        self.driver = webdriver.Firefox(options=options)
-        self.driver = webdriver.Firefox(options=options)
-        self.driver.get("https://stellarburgers.nomoreparties.site/")
+
+@pytest.fixture(scope="class")
+def setup(request):
+    driver = webdriver.Chrome()
+    driver.get("https://stellarburgers.nomoreparties.site/")
+    request.cls.driver = driver
+    yield driver
+    driver.quit()
+
+
+@pytest.mark.usefixtures("setup")
+class TestStellarBurgers:
 
     def test_successful_registration(self):
-        # Тест успешной регистрации
         driver = self.driver
         driver.find_element_by_id(RegistrationPageLocators.NAME_INPUT).send_keys("Имя")
         driver.find_element_by_id(RegistrationPageLocators.EMAIL_INPUT).send_keys("example@example.com")
         driver.find_element_by_id(RegistrationPageLocators.PASSWORD_INPUT).send_keys("password123")
         driver.find_element_by_id(RegistrationPageLocators.REGISTER_BUTTON).click()
-        # Добавьте проверки на успешную регистрацию
+
+        # Проверка на успешную регистрацию
+        success_message = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.ID, "success-message"))
+        )
+        assert "Регистрация прошла успешно" in success_message.text
 
     def test_invalid_password_error(self):
-        # Тест ошибки для некорректного пароля
         driver = self.driver
         driver.find_element_by_id(RegistrationPageLocators.NAME_INPUT).send_keys("Имя")
         driver.find_element_by_id(RegistrationPageLocators.EMAIL_INPUT).send_keys("example@example.com")
         driver.find_element_by_id(RegistrationPageLocators.PASSWORD_INPUT).send_keys("short")
         driver.find_element_by_id(RegistrationPageLocators.REGISTER_BUTTON).click()
 
-    def tearDown(self):
-        # Завершение работы браузера после каждого теста
-        self.driver.quit()
+        # Проверка на появление ошибки
+        error_message = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.ID, "error-message"))
+        )
+        assert "Пароль слишком короткий" in error_message.text
 
-if __name__ == "__main__":
-    unittest.main()
+    def test_login_from_homepage(self):
+        driver = self.driver
+        driver.find_element_by_id(RegistrationPageLocators.LOGIN_BUTTON_HOMEPAGE).click()
+
+        # Заполнение формы входа
+        driver.find_element_by_id(RegistrationPageLocators.LOGIN_EMAIL_INPUT).send_keys("example@example.com")
+        driver.find_element_by_id(RegistrationPageLocators.LOGIN_PASSWORD_INPUT).send_keys("password123")
+        driver.find_element_by_id(RegistrationPageLocators.LOGIN_SUBMIT_BUTTON).click()
+
+        # Проверьте, что вход выполнен успешно
+        success_element = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.ID, "success-element"))
+        )
+        assert "Вход выполнен успешно" in success_element.text
+
+    def test_login_from_registration_form(self):
+        driver = self.driver
+        driver.find_element_by_id(RegistrationPageLocators.LOGIN_BUTTON_REGISTRATION_FORM).click()
+
+        # Заполнение формы входа
+        driver.find_element_by_id(RegistrationPageLocators.LOGIN_EMAIL_INPUT).send_keys("example@example.com")
+        driver.find_element_by_id(RegistrationPageLocators.LOGIN_PASSWORD_INPUT).send_keys("password123")
+        driver.find_element_by_id(RegistrationPageLocators.LOGIN_SUBMIT_BUTTON).click()
+
+        # Проверьте, что вход выполнен успешно
+        success_element = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.ID, "success-element"))
+        )
+        assert "Вход выполнен успешно" in success_element.text
+
+    def test_login_from_password_recovery_form(self):
+        driver = self.driver
+        driver.find_element_by_id(RegistrationPageLocators.LOGIN_BUTTON_PASSWORD_RECOVERY_FORM).click()
+
+        # Заполнение формы входа
+        driver.find_element_by_id(RegistrationPageLocators.LOGIN_EMAIL_INPUT).send_keys("example@example.com")
+        driver.find_element_by_id(RegistrationPageLocators.LOGIN_PASSWORD_INPUT).send_keys("password123")
+        driver.find_element_by_id(RegistrationPageLocators.LOGIN_SUBMIT_BUTTON).click()
+
+        # Проверьте, что вход выполнен успешно
+        success_element = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.ID, "success-element"))
+        )
+        assert "Вход выполнен успешно" in success_element.text
+
+    def test_login_from_personal_cabinet(self):
+        driver = self.driver
+        driver.find_element_by_id(RegistrationPageLocators.LOGIN_BUTTON_PERSONAL_CABINET).click()
+
+        # Заполнение формы входа
+        driver.find_element_by_id(RegistrationPageLocators.LOGIN_EMAIL_INPUT).send_keys("example@example.com")
+        driver.find_element_by_id(RegistrationPageLocators.LOGIN_PASSWORD_INPUT).send_keys("password123")
+        driver.find_element_by_id(RegistrationPageLocators.LOGIN_SUBMIT_BUTTON).click()
+
+        # Проверьте, что вход выполнен успешно
+        success_element = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.ID, "success-element"))
+        )
+        assert "Вход выполнен успешно" in success_element.text
